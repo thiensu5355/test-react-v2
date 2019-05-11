@@ -1,12 +1,8 @@
-.dataTable {
+.dataTable, .message {
   margin-top: 20px;
 }
 
-.dataFrom {
-  margin: auto;
-}
-
-.buttonAdd {
+.dataFrom, .buttonAdd {
   margin: auto;
 }
 
