@@ -1,3 +1,15 @@
+.dataTable {
+  margin-top: 20px;
+}
+
+.dataFrom {
+  margin: auto;
+}
+
+.buttonAdd {
+  margin: auto;
+}
+
 .addButton{
   float: right;
   margin-top: 10px;

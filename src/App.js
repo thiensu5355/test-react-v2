@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Modal, Form, Table } from 'react-bootstrap';
+import { Button, Form, Table, Col } from 'react-bootstrap';
 import './App.css';
 import axios from 'axios';
 import _ from 'lodash';
@@ -7,16 +7,22 @@ import _ from 'lodash';
 class App extends React.Component {
   constructor(props, context) {
     super(props, context);
-
-    this.handleShow = this.handleShow.bind(this);
-    this.handleClose = this.handleClose.bind(this);
-
     this.state = {
+      edit: false,
       show: false,
       data: [],
       email: '',
       password: ''
     };
+  }
+
+  onAdd = () => {
+    this.setState({
+      edit: false,
+      show: true,
+      email: '',
+      password: ''
+    });
   }
 
   componentDidMount() {
@@ -27,14 +33,6 @@ class App extends React.Component {
     }).catch(err => {
       console.log(err);
     });
-  }
-
-  handleClose() {
-    this.setState({ show: false });
-  }
-
-  handleShow() {
-    this.setState({ show: true });
   }
 
   onChange = (event) => {
@@ -53,22 +51,53 @@ class App extends React.Component {
       password: this.state.password
     }
     axios.post('https://economic-database.azurewebsites.net/user', data)
-    .then(res => {
-      this.state.data.push(res.data);
-      this.setState({
-        show: false,
-        email: '',
-        password: ''
+      .then(res => {
+        this.state.data.push(res.data);
+        this.setState({
+          show: false,
+          email: '',
+          password: ''
+        });
       });
-    });
   }
 
   onDelete = (id) => {
     axios.delete(`https://economic-database.azurewebsites.net/user/${id}`)
-    .then(res => {
-     const data = _.reject(this.state.data, function(el) { return el['_id'] === "5cd23119264380279cb640ff"; });
+      .then(() => {
+        const data = _.reject(this.state.data, function (el) { return el['_id'] === id; });
+        this.setState({
+          data: data
+        });
+    });
+  }
+
+  onEdit = (data) => {
+    this.setState({
+      id: data._id,
+      show: true,
+      edit: true,
+      email: data.email,
+      password: data.password
+    });
+  }
+
+  onSubmitedit = (event) => {
+    event.preventDefault();
+    const data = {
+      email: this.state.email,
+      password: this.state.password
+    }
+    axios.put(`https://economic-database.azurewebsites.net/user/${this.state.id}`, data)
+    .then(() => {
+      const objIndex = this.state.data.findIndex(obj => obj._id === this.state.id);
+      let y = this.state.data;
+      y[objIndex].email = this.state.email;
+      y[objIndex].password = this.state.password;
       this.setState({
-        data: data
+        show: false,
+        edit: false,
+        email: '',
+        password: ''
       });
     });
   }
@@ -78,11 +107,11 @@ class App extends React.Component {
       <div>
         <div className="container">
           <div className="addButton">
-            <Button variant="primary" onClick={this.handleShow}>
+            <Button variant="primary" onClick={this.onAdd}>
               <i className="fas fa-plus"></i> Add
             </Button>
           </div>
-          <div>
+          <div className="dataTable">
             <Table className="text-center" striped bordered hover size="sm">
               <thead>
                 <tr>
@@ -100,43 +129,32 @@ class App extends React.Component {
                       <th scope="row">{index + 1}</th>
                       <td>{data.email}</td>
                       <td>{data.password}</td>
-                      <td><Button variant="primary" size="sm"><i className="fas fa-edit"></i></Button></td>
-                      <td><Button onClick={() => this.onDelete(data._id)} variant="primary" size="sm"><i className="fas fa-trash-alt"></i></Button></td>
+                      <td><Button onClick={() => this.onEdit(data)} variant="info" size="sm"><i className="fas fa-edit"></i></Button></td>
+                      <td><Button onClick={() => this.onDelete(data._id)} variant="danger" size="sm"><i className="fas fa-trash-alt"></i></Button></td>
                     </tr>
                   ))
                 }
               </tbody>
             </Table>
           </div>
-          <div>
-            <Modal show={this.state.show} onHide={this.handleClose} size="lg" aria-labelledby="example-modal-sizes-title-lg">
-              <Modal.Header closeButton>
-                <Modal.Title>Add User</Modal.Title>
-              </Modal.Header>
-              <Form onSubmit={this.onSubmit}>
-                <Modal.Body>
-                  <Form.Group controlId="formBasicEmail">
-                    <Form.Label>Email address</Form.Label>
-                    <Form.Control name="email" type="email" placeholder="Enter email" value={this.state.email} onChange={this.onChange} />
-                  </Form.Group>
-
-                  <Form.Group controlId="formBasicPassword">
-                    <Form.Label>Password</Form.Label>
-                    <Form.Control name="password" type="password" placeholder="Password" value={this.state.password} onChange={this.onChange} />
-                  </Form.Group>
-
-                </Modal.Body>
-                <Modal.Footer>
-                  <Button variant="secondary" onClick={this.handleClose}>
-                    Close
-                  </Button>
-                  <Button variant="primary" type="submit">
-                    Save
-                  </Button>
-                </Modal.Footer>
+          {
+            (this.state.show) ? 
+            <Col xs={6} md={6} className="dataFrom">
+              <Form onSubmit={(this.state.edit) ? this.onSubmitedit : this.onSubmit}>
+                <Form.Group controlId="formBasicEmail">
+                  <Form.Label>Email address</Form.Label>
+                  <Form.Control name="email" type="email" placeholder="Enter email" value={this.state.email} onChange={this.onChange} />
+                </Form.Group>
+                <Form.Group controlId="formBasicPassword">
+                  <Form.Label>Password</Form.Label>
+                  <Form.Control name="password" type="password" placeholder="Password" value={this.state.password} onChange={this.onChange} />
+                </Form.Group>
+                <Col xs={8} md={2} className="buttonAdd">
+                  <Button variant="primary" type="submit">Save</Button>
+                </Col>
               </Form>
-            </Modal>
-          </div>
+            </Col> : null
+          }
         </div>
       </div>
     );
